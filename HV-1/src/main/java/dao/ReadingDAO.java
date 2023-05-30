@@ -53,7 +53,7 @@ public interface ReadingDAO extends IDAO<Reading>{
 	@RegisterRowMapper(ReadingRowMapper.class)
 	Reading findById(@Bind("r_uuid") UUID uuid);
 	
-	//ToDo
+	//2 Jahre
 	@Override
 	@SqlQuery("""
 			Select r.uuid as reading_uuid, r.dateOfReading as reading_dateOfReading, 
@@ -61,6 +61,7 @@ public interface ReadingDAO extends IDAO<Reading>{
 				   r.meterId as reading_meterId, r.substitute as reading_substitute, r.meterCount as reading_meterCount,
 				   c.uuid as customer_uuid, c.firstname as customer_firstname, c.lastname as customer_lastname
 				   From reading r left join customer c on r.customer_id = c.id
+			  	   where r.dateOfReading >= Date(concat_ws('-', year(now())-2,'01','01'))
 			  """)
 	@RegisterRowMapper(ReadingRowMapper.class)
 	List<Reading> getAll(); 

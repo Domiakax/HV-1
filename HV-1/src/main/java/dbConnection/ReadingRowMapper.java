@@ -36,6 +36,7 @@ public class ReadingRowMapper implements RowMapper<Reading>{
 			c.setLastname(rs.getString(Customer.FIELD_LASTNAME));
 			r.setCustomer(c);
 		}
+		System.out.println(r);
 		return r;
 	}
 

@@ -10,6 +10,7 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import model.Customer;
+import model.ICustomer;
 
 public interface CustomerDAO extends IDAO<Customer>{
 	

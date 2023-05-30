@@ -43,7 +43,7 @@ public class Main {
 		Reading ir = new Reading();
 		ir.setUuid(UUID.randomUUID());
 		ir.setCustomer(c);
-		ir.setDateOfReading(LocalDate.now());
+		ir.setDateOfReading(LocalDate.of(2020,12,31));
 		ir.setComment("test");
 		ir.setKindOfMeter("bla");
 		connector.addReading(ir);
@@ -65,6 +65,16 @@ public class Main {
 		System.out.println("updated: "+b);
 		System.out.println("----Delete Customer");
 		connector.deletCustomer(c.getUuid());
+		
+		System.out.println("Invalid Customer Search");
+		ICustomer search = connector.findCustomer(null);
+		System.out.println(search);
+		
+		System.out.println("Invalid Reading Search");
+		Reading rsearch = connector.findReadingByUUID(UUID.randomUUID());
+		System.out.println(rsearch);
+		
+		 
 	}
 
 }

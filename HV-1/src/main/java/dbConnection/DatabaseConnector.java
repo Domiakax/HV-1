@@ -12,6 +12,7 @@ import dao.CustomerDAO;
 import dao.ReadingDAO;
 import model.Customer;
 import model.ICustomer;
+import model.IReading;
 import model.Reading;
 
 public class DatabaseConnector {
@@ -62,7 +63,7 @@ public class DatabaseConnector {
 		return kundeDao.findById(uuid);
 	}
 	
-	public List<Customer> getAllCustomer(){
+	public List<? extends ICustomer> getAllCustomer(){
 		return kundeDao.getAll();
 	}
 	
