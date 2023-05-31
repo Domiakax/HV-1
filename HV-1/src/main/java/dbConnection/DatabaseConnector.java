@@ -1,5 +1,6 @@
 package dbConnection;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,11 +52,26 @@ public class DatabaseConnector {
 		return connector;
 	}
 	
-	public void addCustomer(Customer c) {
-		kundeDao.insert(c);
+	public void truncateTables() {
+		ablesungDao.truncate();
+		kundeDao.truncate();
 	}
 	
-	public boolean updateCustomer(Customer c) {
+	public boolean addCustomer(ICustomer c) {
+		if(c == null || c.getUuid() == null) {
+			return false;
+		}
+		try {
+			return kundeDao.insert(c);
+		} catch(Exception e) {
+			return false;
+		}
+	}
+	
+	public boolean updateCustomer(ICustomer c) {
+		if(c == null) {
+			return false;
+		}
 		return kundeDao.update(c);
 	}
 	
@@ -67,16 +83,30 @@ public class DatabaseConnector {
 		return kundeDao.getAll();
 	}
 	
-	public boolean deletCustomer(UUID uuid) {
+	public boolean deleteCustomer(UUID uuid) {
 		ablesungDao.customerDeleted(uuid);
 		boolean deleted = kundeDao.delete(uuid);
 		return deleted;
 	}
 	
-	//Not finished
-	public boolean addReading(Reading ir) {
-		ablesungDao.insert(ir);
-		return true;
+	public boolean addReading(IReading ir) {
+		if(ir == null) {
+			return false;
+		}
+		ICustomer ic = ir.getCustomer();
+		if(ic == null) {
+			return false;
+		}
+		UUID ic_Id = ic.getUuid();
+		ICustomer icInDatabase =  kundeDao.findById(ic_Id);
+		if(icInDatabase == null || !icInDatabase.equals(ic)) {
+			return false;
+		}
+		try {
+			return ablesungDao.insert(ir);
+		}catch(Exception e) {
+			return false;
+		}
 	}
 	
 	public Reading findReadingByUUID(UUID uuid) {
@@ -88,6 +118,16 @@ public class DatabaseConnector {
 	}
 	
 	public boolean updateReading(Reading r) {
+		if(r == null || r.getCustomer() == null) {
+			return false;
+		}
+		if(findCustomer(r.getCustomer().getUuid()) == null) {
+			return false;
+		}
 		return ablesungDao.update(r);
+	}
+	
+	public boolean deleteReading(UUID uuid) {
+		return ablesungDao.delete(uuid);
 	}
 }

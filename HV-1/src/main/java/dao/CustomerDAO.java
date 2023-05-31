@@ -12,7 +12,7 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 import model.Customer;
 import model.ICustomer;
 
-public interface CustomerDAO extends IDAO<Customer>{
+public interface CustomerDAO extends IDAO<ICustomer>{
 	
 	@Override
 	@SqlUpdate("""
@@ -29,14 +29,14 @@ public interface CustomerDAO extends IDAO<Customer>{
 			Insert into Customer(uuid, firstname, lastname) 
 			values (:uuid, :firstname, :lastname)
 			""")
-	void insert(@BindBean Customer c);
+	boolean insert(@BindBean ICustomer c);
 	
 	@Override
 	@SqlUpdate("""
 			Update Customer set firstname = :firstname, lastname = :lastname
 			where uuid = :uuid
 			""")
-	boolean update(@BindBean Customer c);
+	boolean update(@BindBean ICustomer c);
 
 	@Override
 	@RegisterBeanMapper(Customer.class)
@@ -57,6 +57,12 @@ public interface CustomerDAO extends IDAO<Customer>{
 			Delete from Customer where uuid = :c_uuid
 			""")
 	boolean delete(@Bind("c_uuid") UUID id); 
+	
+	@Override
+	@SqlUpdate("""
+			Truncate customer
+			""")
+	void truncate();		
 
 	
 }

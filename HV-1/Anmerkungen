@@ -2,3 +2,6 @@ Vorbereitungen:
 
 ICustomer, IReading, IDatabaseConnection
 Leere Klassen mit implements ICustomer...
+
+Testabdeckung 80%
+

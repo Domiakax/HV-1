@@ -36,7 +36,7 @@ public class Main {
 //		boolean deleted = connector.deletCustomer(c.getUuid());
 //		System.out.println("Deleted:" +deleted);
 		
-		System.out.println(connector.deletCustomer(null));
+		System.out.println(connector.deleteCustomer(null));
 		
 		System.out.println("--------");
 		System.out.println("add reading");
@@ -63,8 +63,8 @@ public class Main {
 		ir.setDateOfReading(LocalDate.of(2022, 8, 10));
 		b = connector.updateReading(ir);
 		System.out.println("updated: "+b);
-		System.out.println("----Delete Customer");
-		connector.deletCustomer(c.getUuid());
+//		System.out.println("----Delete Customer");
+//		connector.deletCustomer(c.getUuid());
 		
 		System.out.println("Invalid Customer Search");
 		ICustomer search = connector.findCustomer(null);
@@ -74,7 +74,10 @@ public class Main {
 		Reading rsearch = connector.findReadingByUUID(UUID.randomUUID());
 		System.out.println(rsearch);
 		
-		 
+		System.out.println("Invalid Reading add");
+		c.setUuid(UUID.randomUUID());
+		ir.setCustomer(c);
+		System.out.println(connector.addReading(ir));
 	}
 
 }

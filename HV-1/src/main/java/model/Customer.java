@@ -16,7 +16,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @NoArgsConstructor
-@AllArgsConstructor
+//@AllArgsConstructor
 public class Customer implements ICustomer{
 	
 	public static final String FIELD_UUID = "customer_uuid";

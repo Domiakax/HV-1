@@ -10,9 +10,10 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import dbConnection.ReadingRowMapper;
+import model.IReading;
 import model.Reading;
 
-public interface ReadingDAO extends IDAO<Reading>{
+public interface ReadingDAO extends IDAO<IReading>{
 
 	static final int yearBorder = 2;
 	
@@ -39,7 +40,7 @@ public interface ReadingDAO extends IDAO<Reading>{
 			From customer c
 			where c.uuid = :customer.uuid; 
 			""")
-	void insert(@BindBean Reading o);		
+	boolean insert(@BindBean IReading o);		
 	
 	@Override
 	@SqlQuery("""
@@ -74,7 +75,7 @@ public interface ReadingDAO extends IDAO<Reading>{
 			substitute = :substitute, meterCount = :metercount
 			where uuid = :uuid
 			""")
-	boolean update(@BindBean Reading r);
+	boolean update(@BindBean IReading r);
 
 	@Override
 	@SqlUpdate("""
@@ -87,5 +88,9 @@ public interface ReadingDAO extends IDAO<Reading>{
 			""")
 	void customerDeleted(@Bind("c_uuid") UUID customerUUID);
 
-	
+	@Override
+	@SqlUpdate("""
+			Truncate Reading
+			""")
+	void truncate();
 }

@@ -7,13 +7,13 @@ public interface IDAO<T> {
 
 
    // CREATE
-   void insert(T o);
+   boolean insert(T o);
 
    // READ
    T findById(UUID id);
    
    // READ
-   List<T> getAll();
+   List<? extends T> getAll();
    
    // UPDATE
    boolean update(T o);
@@ -23,6 +23,6 @@ public interface IDAO<T> {
    // DELETE
    boolean delete(UUID id);
    
-   // DELETE
-//   void delete(T o);
+   // DELETE ALL
+   void truncate();
 }
