@@ -1,31 +1,38 @@
 package database;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 
-import dbConnection.DatabaseConnector;
+import dbConnection.ConnectionFactory;
+import dev.hv.db.init.IConnection;
+import dev.hv.db.init.ICustomerService;
+import dev.hv.db.init.IFacilityService;
+import dev.hv.db.init.IReadingService;
+import dev.hv.db.model.ICustomer;
+import dev.hv.db.model.IReading;
 import model.Customer;
-import model.ICustomer;
-import model.IReading;
 import model.Reading;
-
-import org.junit.jupiter.api.MethodOrderer.OrderAnnotation;
-import org.junit.jupiter.api.Order;
 
 @TestMethodOrder(OrderAnnotation.class)
 class DatabaseImplementationTest {
 
-//	private static final String urlDatabase = "jdbc:mariadb://localhost:3306/hv1";
-//	private static final String dbUser = "root";
-//	private static final String dbUserPW = "";
-	
+	private static final String urlDatabase = "jdbc:mariadb://localhost:3306/hv1";
+	private static final String dbUser = "root";
+	private static final String dbUserPW = "";
+
 	private static Customer c1;
 	private static Customer c2;
 	private static Customer notInDatabase;
@@ -33,201 +40,229 @@ class DatabaseImplementationTest {
 	private static Reading ir1;
 	private static Reading ir2;
 	private static Reading irBefore2Years;
-	
-	
+//	private static IFacilityService iService;
+	private static ICustomerService customerService;
+	private static IReadingService readingService;
+	private static IConnection connection;
+
 	@BeforeAll
 	static void setUp() {
-		DatabaseConnector.getDatabaseConnector().truncateTables();
+		connection = new ConnectionFactory().createConnection(urlDatabase, dbUser, dbUserPW);
+		connection.createAllTables();
+		connection.truncateAllTables();
+
+		IFacilityService iService = connection.getFacilityService();
+		customerService = iService.getICustomerService();
+		readingService = iService.getIReadingService();
+
 		c1 = new Customer();
 		c1.setFirstname("a");
 		c1.setLastname("A");
 		c1.setUuid(UUID.randomUUID());
-		
+
 		c2 = new Customer();
 		c2.setFirstname("b");
 		c2.setLastname("B");
 		c2.setUuid(UUID.randomUUID());
-		
+
 		notInDatabase = new Customer();
 		notInDatabase.setUuid(UUID.randomUUID());
-		
+
 		UUID_Null = new Customer();
-		
+
 		ir1 = new Reading();
 		ir1.setUuid(UUID.randomUUID());
 		ir1.setCustomer(c2);
-		ir1.setDateOfReading(LocalDate.of(2022,12,31));
+		ir1.setDateOfReading(LocalDate.of(2022, 12, 31));
 		ir1.setComment("test");
-		ir1.setKindOfMeter("bla");
 		ir1.setMetercount(200.5);
-		
+
 		ir2 = new Reading();
 		ir2.setUuid(UUID.randomUUID());
 		ir2.setCustomer(c2);
-		ir2.setDateOfReading(LocalDate.of(2022,12,31));
+		ir2.setDateOfReading(LocalDate.of(2022, 12, 31));
 		ir2.setComment("test");
-		ir2.setKindOfMeter("bla");
 		ir2.setMetercount(200.5);
-		
+
 		irBefore2Years = new Reading();
 		irBefore2Years.setUuid(UUID.randomUUID());
 		irBefore2Years.setCustomer(c1);
 		irBefore2Years.setDateOfReading(LocalDate.of(2020, 12, 31));
 	}
-	
+
 	@Test
 	@Order(0)
 	void c_CustomerPositive() {
-		assertTrue(DatabaseConnector.getDatabaseConnector().addCustomer(c1));
-		assertTrue(DatabaseConnector.getDatabaseConnector().addCustomer(c2));
+		assertTrue(customerService.insert(c1));
+		assertTrue(customerService.insert(c2));
 	}
-	
+
 	@Test
 	@Order(1)
 	void c_CustomerNegative() {
-		assertFalse(DatabaseConnector.getDatabaseConnector().addCustomer(c1));
-		assertFalse(DatabaseConnector.getDatabaseConnector().addCustomer(new Customer()));
-		assertFalse(DatabaseConnector.getDatabaseConnector().addCustomer(null));
+		assertFalse(customerService.insert(c1));
+		assertFalse(customerService.insert(new Customer()));
+		assertFalse(customerService.insert(null));
 	}
-	
+
 	@Test
 	@Order(2)
 	void r_SingleCustomerPositive() {
-		ICustomer c1Search = DatabaseConnector.getDatabaseConnector().findCustomer(c1.getUuid());
+		ICustomer c1Search = customerService.findById(c1.getUuid());
 		assertEquals(c1, c1Search);
 	}
-	
+
 	@Test
 	@Order(3)
 	void r_SingleCustomerNegative() {
-		ICustomer c1Search = DatabaseConnector.getDatabaseConnector().findCustomer(null);
+		// Null - Object
+		ICustomer c1Search = customerService.findById(null);
 		assertNull(c1Search);
-		assertNull(DatabaseConnector.getDatabaseConnector().findCustomer(UUID.randomUUID()));
+		// Random - UUID
+		assertNull(customerService.findById(UUID.randomUUID()));
 	}
-	
+
 	@Test
 	@Order(4)
 	void r_AllCustomersPositive() {
-		List<? extends ICustomer> customers = DatabaseConnector.getDatabaseConnector().getAllCustomer();
+		List<? extends ICustomer> customers = customerService.getAll();
 		assertTrue(customers.contains(c1));
 		assertTrue(customers.contains(c2));
 		assertTrue(customers.size() == 2);
 	}
-	
+
 	@Test
 	@Order(5)
 	void u_CustomerPositive() {
 		c1.setFirstname("updated");
-		boolean updated = DatabaseConnector.getDatabaseConnector().updateCustomer(c1);
+		boolean updated = customerService.update(c1);
 		assertTrue(updated);
+		// Stored in Database
+		ICustomer inDatabase = customerService.findById(c1.getUuid());
+		assertEquals(c1, inDatabase);
 	}
-	
+
 	@Test
 	@Order(6)
 	void u_CustomerNegative() {
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateCustomer(null));
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateCustomer(notInDatabase));
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateCustomer(UUID_Null));
+		assertFalse(customerService.update(null));
+		assertFalse(customerService.update(notInDatabase));
+		assertFalse(customerService.update(UUID_Null));
 	}
-	
+
 	@Test
 	@Order(7)
 	void c_ReadingPositive() {
-		assertTrue(DatabaseConnector.getDatabaseConnector().addReading(ir1));
-		assertTrue(DatabaseConnector.getDatabaseConnector().addReading(ir2));
-		assertTrue(DatabaseConnector.getDatabaseConnector().addReading(irBefore2Years));
+		assertTrue(readingService.insert(ir1));
+		assertTrue(readingService.insert(ir2));
+		assertTrue(readingService.insert(irBefore2Years));
 	}
-	
+
 	@Test
 	@Order(8)
 	void c_ReadingNegative() {
-		assertFalse(DatabaseConnector.getDatabaseConnector().addReading(ir1));
-		assertFalse(DatabaseConnector.getDatabaseConnector().addReading(null));
+		assertFalse(readingService.insert(ir1));
+		assertFalse(readingService.insert(null));
 		Reading r = new Reading();
-		assertFalse(DatabaseConnector.getDatabaseConnector().addReading(r));
+		assertFalse(readingService.insert(r));
 		r.setUuid(UUID.randomUUID());
-		assertFalse(DatabaseConnector.getDatabaseConnector().addReading(r));
+		assertFalse(readingService.insert(r));
 		r.setCustomer(notInDatabase);
-		assertFalse(DatabaseConnector.getDatabaseConnector().addReading(r));
-		
+		assertFalse(readingService.insert(r));
+
 	}
-	
+
 	@Test
 	@Order(9)
 	void u_ReadingPositive() {
 		ir1.setCustomer(c1);
 		ir1.setComment("updated");
 		ir1.setMetercount(3000.0);
-		assertTrue(DatabaseConnector.getDatabaseConnector().updateReading(ir1));
+		assertTrue(readingService.update(ir1));
 	}
-	
+
 	@Test
 	@Order(10)
 	void u_ReadingNegative() {
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateReading(null));
+		assertFalse(readingService.update(null));
 		Reading r = new Reading();
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateReading(r));
+		assertFalse(readingService.update(r));
 		r.setUuid(UUID.randomUUID());
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateReading(r));
+		assertFalse(readingService.update(r));
 		r.setCustomer(notInDatabase);
-		assertFalse(DatabaseConnector.getDatabaseConnector().updateReading(r));
+		assertFalse(readingService.update(r));
 	}
-	
+
 	@Test
 	@Order(11)
 	void r_ReadingSinglePositive() {
-		IReading result = DatabaseConnector.getDatabaseConnector().findReadingByUUID(ir1.getUuid());
+		IReading result = readingService.findById(ir1.getUuid());
 		assertEquals(ir1, result);
 	}
-	
+
 	@Test
 	@Order(12)
 	void r_ReadingSingleNegative() {
-		assertNull(DatabaseConnector.getDatabaseConnector().findReadingByUUID(null));
-		assertNull(DatabaseConnector.getDatabaseConnector().findReadingByUUID(UUID.randomUUID()));
+		assertNull(readingService.findById(null));
+		assertNull(readingService.findById(UUID.randomUUID()));
 	}
-	
+
 	@Test
 	@Order(13)
 	void r_ReadingsAllPositive() {
-		//2 Jahre beachten
-		List<? extends IReading> result = DatabaseConnector.getDatabaseConnector().getAllReadings();
+		// 2 Jahre nicht beachten
+		List<? extends IReading> result = readingService.getAll();
 //		System.out.println("Result");
 //		result.stream().forEach(System.out::println);
 //		System.out.println("Result-Ende");
 		assertTrue(result.contains(ir1));
 		assertTrue(result.contains(ir2));
-		assertTrue(result.size() == 2);
+		assertTrue(result.contains(irBefore2Years));
+		assertTrue(result.size() == 3);
 	}
-	
+
 	@Test
 	@Order(14)
 	void d_ReadingPositive() {
-		assertTrue(DatabaseConnector.getDatabaseConnector().deleteReading(irBefore2Years.getUuid()));
+		assertTrue(readingService.delete(irBefore2Years.getUuid()));
 	}
-	
+
 	@Test
 	@Order(15)
 	void d_ReadingNegative() {
-		assertFalse(DatabaseConnector.getDatabaseConnector().deleteReading(null));
-		assertFalse(DatabaseConnector.getDatabaseConnector().deleteReading(UUID.randomUUID()));
+		assertFalse(readingService.delete(null));
+		assertFalse(readingService.delete(UUID.randomUUID()));
 	}
-	
+
 	@Test
 	@Order(16)
 	void d_CustomerPositive() {
-		assertTrue(DatabaseConnector.getDatabaseConnector().deleteCustomer(c1.getUuid()));
+		assertTrue(customerService.delete(c1.getUuid()));
 		ir1.setCustomer(null);
-		Reading result = DatabaseConnector.getDatabaseConnector().findReadingByUUID(ir1.getUuid());
+		IReading result = readingService.findById(ir1.getUuid());
 		assertEquals(ir1, result);
 		assertNull(result.getCustomer());
 	}
-	
+
 	@Test
 	@Order(17)
 	void d_CustomerNegative() {
-		assertFalse(DatabaseConnector.getDatabaseConnector().deleteCustomer(null));
-		assertFalse(DatabaseConnector.getDatabaseConnector().deleteCustomer(UUID.randomUUID()));
+		assertFalse(customerService.delete(null));
+		assertFalse(customerService.delete(UUID.randomUUID()));
+	}
+
+	@Test
+	@Order(18)
+	void truncateTablesDeletes() {
+		connection.truncateAllTables();
+		assertTrue(customerService.getAll().size() == 0);
+		assertTrue(readingService.getAll().size() == 0);
+	}
+
+	@AfterAll
+	static void closeConnection() {
+		connection.removeAllTables();
+		connection.closeConnection();
 	}
 
 }

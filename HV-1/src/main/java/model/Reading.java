@@ -6,7 +6,8 @@ import java.util.UUID;
 import org.jdbi.v3.core.mapper.Nested;
 import org.jdbi.v3.core.mapper.reflect.ColumnName;
 
-import lombok.AllArgsConstructor;
+import dev.hv.db.model.ICustomer;
+import dev.hv.db.model.IReading;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,12 +20,11 @@ import lombok.ToString;
 @ToString
 @NoArgsConstructor
 //@AllArgsConstructor
-public class Reading implements IReading{
+public class Reading implements IReading<ICustomer>{
 	
 	public static final String FIELD_UUID = "reading_uuid";
 	public static final String FIELD_DATE_OF_READING = "reading_dateOfReading";
 	public static final String FIELD_COMMENT = "reading_comment";
-	public static final String FIELD_KIND_OF_METER = "reading_kindOfMeter";
 	public static final String FIELD_METER_ID = "reading_meterId";
 	public static final String FIELD_SUBSTITUTE = "reading_substitute";
 	public static final String FIELD_METERCOUNT = "reading_meterCount";
@@ -38,8 +38,6 @@ public class Reading implements IReading{
 	private LocalDate dateOfReading;
 	@ColumnName(FIELD_COMMENT)
 	private String comment;
-	@ColumnName(FIELD_KIND_OF_METER)
-	private String kindOfMeter;
 	@ColumnName(FIELD_METER_ID)
 	private String meterId;
 	@ColumnName(FIELD_SUBSTITUTE)

@@ -10,10 +10,10 @@ import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
 import dbConnection.ReadingRowMapper;
-import model.IReading;
+import dev.hv.db.model.IReading;
 import model.Reading;
 
-public interface ReadingDAO extends IDAO<IReading>{
+public interface IReadingDAO extends dev.hv.db.dao.IReadingDAO{
 
 	static final int yearBorder = 2;
 	
@@ -25,7 +25,6 @@ public interface ReadingDAO extends IDAO<IReading>{
 			customer_id int,
 			dateOfReading date,
 			comment varchar(255),
-			kindOfReading varchar(255),
 			meterId varchar(255),
 			substitute boolean,
 			meterCount double
@@ -35,8 +34,14 @@ public interface ReadingDAO extends IDAO<IReading>{
 	
 	@Override
 	@SqlUpdate("""
-			Insert into Reading(uuid, customer_id, dateOfReading,comment, kindofreading, meterId, substitute,metercount)
-			Select :uuid, id, :dateOfReading, :comment, :kindOfMeter, :meterId, :substitute, :metercount
+			Drop Table if exists Reading
+			""")
+	void removeTable();
+	
+	@Override
+	@SqlUpdate("""
+			Insert into Reading(uuid, customer_id, dateOfReading,comment, meterId, substitute,metercount)
+			Select :uuid, id, :dateOfReading, :comment, :meterId, :substitute, :metercount
 			From customer c
 			where c.uuid = :customer.uuid; 
 			""")
@@ -45,7 +50,7 @@ public interface ReadingDAO extends IDAO<IReading>{
 	@Override
 	@SqlQuery("""
 			Select r.uuid as reading_uuid, r.dateOfReading as reading_dateOfReading, 
-				   r.comment as reading_comment, r.kindOfReading as reading_kindOfMeter,
+				   r.comment as reading_comment,
 				   r.meterId as reading_meterId, r.substitute as reading_substitute, r.meterCount as reading_meterCount,
 				   c.uuid as customer_uuid, c.firstname as customer_firstname, c.lastname as customer_lastname
 				   From reading r left join customer c on r.customer_id = c.id
@@ -55,14 +60,14 @@ public interface ReadingDAO extends IDAO<IReading>{
 	Reading findById(@Bind("r_uuid") UUID uuid);
 	
 	//2 Jahre
+	//where r.dateOfReading >= Date(concat_ws('-', year(now())-2,'01','01'))
 	@Override
 	@SqlQuery("""
 			Select r.uuid as reading_uuid, r.dateOfReading as reading_dateOfReading, 
-				   r.comment as reading_comment, r.kindOfReading as reading_kindOfMeter,
+				   r.comment as reading_comment,
 				   r.meterId as reading_meterId, r.substitute as reading_substitute, r.meterCount as reading_meterCount,
 				   c.uuid as customer_uuid, c.firstname as customer_firstname, c.lastname as customer_lastname
 				   From reading r left join customer c on r.customer_id = c.id
-			  	   where r.dateOfReading >= Date(concat_ws('-', year(now())-2,'01','01'))
 			  """)
 	@RegisterRowMapper(ReadingRowMapper.class)
 	List<Reading> getAll(); 
@@ -71,7 +76,7 @@ public interface ReadingDAO extends IDAO<IReading>{
 	@Override
 	@SqlUpdate("""
 			Update Reading set customer_id = (Select id from customer where uuid = :customer.uuid),
-			dateOfReading = :dateOfReading, comment = :comment, kindOfReading = :kindOfMeter, meterId = :meterId, 
+			dateOfReading = :dateOfReading, comment = :comment, meterId = :meterId, 
 			substitute = :substitute, meterCount = :metercount
 			where uuid = :uuid
 			""")

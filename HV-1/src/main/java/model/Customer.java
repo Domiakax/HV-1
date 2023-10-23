@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.jdbi.v3.core.mapper.reflect.ColumnName;
 
-import lombok.AllArgsConstructor;
+import dev.hv.db.model.ICustomer;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,5 +30,11 @@ public class Customer implements ICustomer{
 	private String firstname;
 	@ColumnName(FIELD_LASTNAME)
 	private String lastname;
+	
+	public Customer(ICustomer ic) {
+		setUuid(ic.getUuid());
+		setFirstname(ic.getFirstname());
+		setLastname(ic.getLastname());
+	}
 
 }

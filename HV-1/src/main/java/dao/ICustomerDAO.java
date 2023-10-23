@@ -9,10 +9,10 @@ import org.jdbi.v3.sqlobject.customizer.BindBean;
 import org.jdbi.v3.sqlobject.statement.SqlQuery;
 import org.jdbi.v3.sqlobject.statement.SqlUpdate;
 
+import dev.hv.db.model.ICustomer;
 import model.Customer;
-import model.ICustomer;
 
-public interface CustomerDAO extends IDAO<ICustomer>{
+public interface ICustomerDAO extends dev.hv.db.dao.ICustomerDAO{
 	
 	@Override
 	@SqlUpdate("""
@@ -23,6 +23,12 @@ public interface CustomerDAO extends IDAO<ICustomer>{
 			firstname varchar(255))
 			""")
 	void createTable();
+	
+	@Override
+	@SqlUpdate("""
+			Drop Table if exists Customer
+			""")
+	void removeTable();
 	
 	@Override
 	@SqlUpdate("""
